@@ -1,0 +1,293 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+class Event {
+    String type;
+    String name;
+    String date;
+    String time;
+    String location; // New field for location
+
+    public Event(String type, String name, String date, String time, String location) {
+        this.type = type;
+        this.name = name;
+        this.date = date;
+        this.time = time;
+        this.location = location;
+    }
+
+    @Override
+    public String toString() {
+        return "Type: " + type + "\nName: " + name + "\nDate: " + date + "\nTime: " + time + "\nLocation: " + location;
+    }
+}
+
+class EventManager {
+    Event[] events;
+    int size;
+
+    public EventManager() {
+        this.events = new Event[10]; // Initial capacity, you can change it accordingly
+        this.size = 0;
+    }
+
+    public void addEvent(String type, String name, String date, String time, String location) {
+        if (size == events.length) {
+            // Increase the capacity if needed
+            Event[] newEvents = new Event[events.length * 2];
+            System.arraycopy(events, 0, newEvents, 0, size);
+            events = newEvents;
+        }
+
+        Event event = new Event(type, name, date, time, location);
+        events[size++] = event;
+    }
+
+    public Event getEvent(int index) {
+        if (index >= 0 && index < size) {
+            return events[index];
+        }
+        return null;
+    }
+
+    public void removeEvent(int index) {
+        if (index >= 0 && index < size) {
+            for (int i = index; i < size - 1; i++) {
+                events[i] = events[i + 1];
+            }
+            events[size - 1] = null;
+            size--;
+        }
+    }
+
+    public Event[] getEvents() {
+        return events;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public String displaySchedule() {
+        if (size == 0) {
+            return "No events scheduled.";
+        } else {
+            StringBuilder schedule = new StringBuilder("Event Schedule:\n");
+            for (int i = 0; i < size; i++) {
+                schedule.append(events[i]).append("\n");
+            }
+            return schedule.toString();
+        }
+    }
+}
+
+public class EVENT_SCHEDULE {
+    private EventManager eventManager;
+    private JFrame frame;
+    private JTextField nameField;
+    private JTextField dateField;
+    private JTextField timeField;
+    private JTextField locationField; // New field for location
+    private JPanel displayArea;
+    private JComboBox<String> eventTypeComboBox;
+
+    public EVENT_SCHEDULE() {
+        eventManager = new EventManager();
+        frame = new JFrame("Event Schedule Manager");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 400);
+        frame.setLayout(new CardLayout());
+
+        // Main Menu Panel
+        JPanel menuPanel = new JPanel();
+        menuPanel.setLayout(new GridLayout(3, 1, 10, 10));
+        JButton addEventButton = new JButton("1. Add Event");
+        addEventButton.setPreferredSize(new Dimension(200, 50)); // Set preferred size
+        JButton displayScheduleButton = new JButton("2. Display Schedule");
+        displayScheduleButton.setPreferredSize(new Dimension(200, 50)); // Set preferred size
+        JButton exitButton = new JButton("3. Exit");
+        exitButton.setPreferredSize(new Dimension(200, 50)); // Set preferred size
+
+        addEventButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showAddEventPanel();
+            }
+        });
+
+        displayScheduleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showDisplaySchedulePanel();
+            }
+        });
+
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        menuPanel.add(addEventButton);
+        menuPanel.add(displayScheduleButton);
+        menuPanel.add(exitButton);
+
+        frame.add(menuPanel, "Menu");
+
+        // Add Event Panel
+        JPanel addEventPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        nameField = new JTextField();
+        dateField = new JTextField();
+        timeField = new JTextField();
+        locationField = new JTextField(); // Initialize locationField
+        eventTypeComboBox = new JComboBox<>(new String[]{"SOCIAL", "SPORT", "CULTURAL", "EDUCATIONAL", "CORPORATE", "COMMUNITY"});
+
+        addEventPanel.add(new JLabel("Select event type: "));
+        addEventPanel.add(eventTypeComboBox);
+        addEventPanel.add(new JLabel("Enter event name: "));
+        addEventPanel.add(nameField);
+        addEventPanel.add(new JLabel("Enter event date: "));
+        addEventPanel.add(dateField);
+        addEventPanel.add(new JLabel("Enter event time: "));
+        addEventPanel.add(timeField);
+        addEventPanel.add(new JLabel("Enter event location: ")); // Label for location
+        addEventPanel.add(locationField);
+
+        JButton submitButton = new JButton("Submit");
+        submitButton.setPreferredSize(new Dimension(150, 30)); // Set preferred size
+        JButton backButton1 = new JButton("Back");
+        backButton1.setPreferredSize(new Dimension(150, 30)); // Set preferred size
+
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String type = (String) eventTypeComboBox.getSelectedItem();
+                String name = nameField.getText();
+                String date = dateField.getText();
+                String time = timeField.getText();
+                String location = locationField.getText(); // Get location
+
+                if (type == null || name.isEmpty() || date.isEmpty() || time.isEmpty() || location.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "All fields must be filled out", "Warning", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    eventManager.addEvent(type, name, date, time, location); // Pass location to addEvent
+                    nameField.setText("");
+                    dateField.setText("");
+                    timeField.setText("");
+                    locationField.setText(""); // Clear location field
+                    JOptionPane.showMessageDialog(frame, "Event added successfully!");
+                }
+            }
+        });
+
+        backButton1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showMenuPanel();
+            }
+        });
+
+        addEventPanel.add(submitButton);
+        addEventPanel.add(backButton1);
+
+        frame.add(addEventPanel, "AddEvent");
+
+        // Display Schedule Panel
+        JPanel displaySchedulePanel = new JPanel(new BorderLayout());
+        displayArea = new JPanel();
+        displayArea.setLayout(new BoxLayout(displayArea, BoxLayout.Y_AXIS));
+        displaySchedulePanel.add(new JScrollPane(displayArea), BorderLayout.CENTER);
+
+        JButton backButton2 = new JButton("Back");
+        backButton2.setPreferredSize(new Dimension(150, 30)); // Set preferred size
+        backButton2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showMenuPanel();
+            }
+        });
+
+        displaySchedulePanel.add(backButton2, BorderLayout.SOUTH);
+
+        frame.add(displaySchedulePanel, "DisplaySchedule");
+
+        // Show Menu Panel initially
+        showMenuPanel();
+
+        frame.setVisible(true);
+    }
+
+    private void showMenuPanel() {
+        CardLayout cl = (CardLayout) (frame.getContentPane().getLayout());
+        cl.show(frame.getContentPane(), "Menu");
+    }
+
+    private void showAddEventPanel() {
+        CardLayout cl = (CardLayout) (frame.getContentPane().getLayout());
+        cl.show(frame.getContentPane(), "AddEvent");
+    }
+
+    private void showDisplaySchedulePanel() {
+        displayArea.removeAll(); // Clear the display area
+        Event[] events = eventManager.getEvents();
+        int size = eventManager.getSize();
+
+        if (size == 0) {
+            displayArea.add(new JLabel("No events scheduled."));
+        } else {
+            for (int i = 0; i < size; i++) {
+                JPanel eventPanel = new JPanel();
+                eventPanel.setLayout(new BorderLayout());
+                eventPanel.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.BLACK, 1),
+                        BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
+                JPanel detailsPanel = new JPanel();
+                detailsPanel.setLayout(new GridLayout(5, 1, 5, 5)); // 5 rows, 1 column, with spacing
+
+                JLabel typeLabel = new JLabel("Type:");
+                JLabel nameLabel = new JLabel("Name:");
+                JLabel dateLabel = new JLabel("Date:");
+                JLabel timeLabel = new JLabel("Time:");
+                JLabel locationLabel = new JLabel("Location:"); // Label for location
+
+                JLabel typeValue = new JLabel(events[i].type);
+                JLabel nameValue = new JLabel(events[i].name);
+                JLabel dateValue = new JLabel(events[i].date);
+                JLabel timeValue = new JLabel(events[i].time);
+                JLabel locationValue = new JLabel(events[i].location); // Display location
+
+                detailsPanel.add(typeLabel);
+                detailsPanel.add(typeValue);
+                detailsPanel.add(nameLabel);
+                detailsPanel.add(nameValue);
+                detailsPanel.add(dateLabel);
+                detailsPanel.add(dateValue);
+                detailsPanel.add(timeLabel);
+                detailsPanel.add(timeValue);
+                detailsPanel.add(locationLabel); // Add location label
+                detailsPanel.add(locationValue); // Add location value
+
+                eventPanel.add(detailsPanel, BorderLayout.CENTER);
+
+                displayArea.add(eventPanel);
+            }
+        }
+        displayArea.revalidate();
+        displayArea.repaint();
+        CardLayout cl = (CardLayout) (frame.getContentPane().getLayout());
+        cl.show(frame.getContentPane(), "DisplaySchedule");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new EVENT_SCHEDULE();
+            }
+        });
+    }
+}
+
